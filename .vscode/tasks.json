@@ -1,0 +1,16 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build kaprekar",
+            "type": "shell",
+            "command": "/usr/bin/clang++",
+            "args": [
+                "-std=c++1z","-o","kaprekar", "kaprekar.cpp", "-O3"
+            ],
+            "group": {"kind":"build", "isDefault": true}
+        }
+    ]
+}
