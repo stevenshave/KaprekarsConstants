@@ -6,11 +6,25 @@
         {
             "label": "build kaprekar",
             "type": "shell",
-            "command": "/usr/bin/clang++",
+            "command": "C:\\Program Files\\LLVM\\bin\\clang++",
             "args": [
-                "-std=c++1z","-o","kaprekar", "kaprekar.cpp", "-O3"
+                "-std=c++1z",
+                "-o",
+                "kaprekar.exe",
+                "kaprekar.cpp",
+                "-O3",
+                "-Xclang",
+                "-flto-visibility-public-std"
             ],
-            "group": {"kind":"build", "isDefault": true}
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },{
+            "label": "Execute",
+            "type": "shell",
+            "command": "./kaprekar.exe",
+            "problemMatcher": []
         }
     ]
 }
