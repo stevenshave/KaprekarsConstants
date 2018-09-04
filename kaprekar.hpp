@@ -9,7 +9,7 @@ class Kaprekar
 {
 
   private:
-    std::unique_ptr<ArbitaryInt> begin, end, current, ascending, descending;
+    ArbitaryInt begin, end, current, ascending, descending;
     std::string firstNumber;
     std::vector<ArbitaryInt> intermediates;
 
@@ -28,27 +28,30 @@ class Kaprekar
     void goQuickCheckForKaprekarNumbers(size_t width, int checkN)
     {
         int itercount = 0;
-        begin->data.resize(width, 1);
+        begin.data.resize(width);
         for (int i = 0; i < width - 1; ++i)
-            begin->data[i] = 0;
-        end->data.resize(width, 9);
-        ascending->data.resize(width);
-        descending->data.resize(width);
-        current->data = begin->data;
+            begin.data[i] = 0;
+        begin.data[width - 1] = 1;
+        end.data.resize(width);
+        for (int i = 0; i < width - 1; ++i)
+            end.data[i] = 9;
+        ascending.data.resize(width);
+        descending.data.resize(width);
+        current.data = begin.data;
 
         //Do first
         intermediates.clear();
         intermediates.push_back(*current);
         while (std::count(
                    intermediates.begin(), intermediates.end(), intermediates.back()) == 1)
-        {   
-            descending = (intermediates.back().sortDescending());
+        {
+            descending = (intermediates.back().SortDescending());
 
             for (int i = 0; i < width; ++i)
             {
                 ascending[width - 1 - i] = descending[i];
             }
-            descending->subtract(ascending);
+            descending.subtract(ascending);
             intermediates.push_back(descending);
         }
         current++;
@@ -65,12 +68,12 @@ class Kaprekar
             {
                 descending = intermediates.back().sortDescending();
 
-            for (int i = 0; i < width; ++i)
-            {
-                ascending[width - 1 - i] = descending[i];
-            }
-            descending->subtract(ascending);
-            intermediates.push_back(descending);
+                for (int i = 0; i < width; ++i)
+                {
+                    ascending[width - 1 - i] = descending[i];
+                }
+                descending.subtract(ascending);
+                intermediates.push_back(descending);
             }
             current++;
             ++itercount;
