@@ -1,120 +1,59 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <memory>
 #include "arbitaryInt.hpp"
+
 template <int base>
 class Kaprekar
 {
 
   private:
-    std::vector<int> begin, end, current, ascending, descending;
+    std::unique_ptr<ArbitaryInt> begin, end, current, ascending, descending;
     std::string firstNumber;
-    std::vector<std::vector<int>> intermediates;
-    int tmppos;
-    bool tmpdone;
-    bool tmpadd;
-
-    std::string arrayToString(const std::vector<int> &in)
-    {
-        std::string s;
-        for (int i = 0; i < in.size(); ++i)
-        {
-            s += std::to_string(in[i]);
-        }
-        return s;
-    };
-
-    void incrementSpecialArray(std::vector<int> &num)
-    {
-        tmppos = num.size() - 1;
-        while (true)
-        {
-            if (num[tmppos] != base - 1)
-            {
-                num[tmppos] += 1;
-                return;
-            }
-            else
-            {
-                num[tmppos] = 0;
-                --tmppos;
-            }
-        }
-    };
+    std::vector<ArbitaryInt> intermediates;
 
   public:
     Kaprekar(size_t maxwidth)
     {
         std::cerr << "Reserving space...";
-        begin.reserve(maxwidth);
-        end.reserve(maxwidth);
-        current.reserve(maxwidth);
-        ascending.reserve(maxwidth);
-        descending.reserve(maxwidth);
-
+        begin = std::make_unique<ArbitaryInt>(base, maxwidth);
+        end = std::make_unique<ArbitaryInt>(base, maxwidth);
+        current = std::make_unique<ArbitaryInt>(base, maxwidth);
+        ascending = std::make_unique<ArbitaryInt>(base, maxwidth);
+        descending = std::make_unique<ArbitaryInt>(base, maxwidth);
         std::cerr << "Done\n";
     };
 
     void goQuickCheckForKaprekarNumbers(size_t width, int checkN)
     {
         int itercount = 0;
-        begin.resize(width, 1);
+        begin->data.resize(width, 1);
         for (int i = 0; i < width - 1; ++i)
-            begin[i] = 0;
-        end.resize(width, 9);
-        ascending.resize(width);
-        descending.resize(width);
-        current = begin;
+            begin->data[i] = 0;
+        end->data.resize(width, 9);
+        ascending->data.resize(width);
+        descending->data.resize(width);
+        current->data = begin->data;
 
-        auto makeDescendingAndAscendingFromLastIntermediate = [&]() {
-            tmppos = 0;
-            for (int cur = base - 1; cur >= 0; --cur)
-            {
-                for (int i = 0; i < width; ++i)
-                {
-                    if (intermediates.back()[i] == cur)
-                    {
-                        descending[tmppos] = cur;
-                        ++tmppos;
-                    }
-                }
-            }
+        //Do first
+        intermediates.clear();
+        intermediates.push_back(*current);
+        while (std::count(
+                   intermediates.begin(), intermediates.end(), intermediates.back()) == 1)
+        {   
+            descending = (intermediates.back().sortDescending());
+
             for (int i = 0; i < width; ++i)
             {
                 ascending[width - 1 - i] = descending[i];
             }
-        };
-        auto subtractAscendingFromDescending = [&]() {
-            tmppos = descending.size() - 1;
-            while (tmppos >= 0)
-            {
-                if (descending[tmppos] >= ascending[tmppos])
-                {
-                    descending[tmppos] -= ascending[tmppos];
-                    --tmppos;
-                }
-                else
-                {
-                    descending[tmppos - 1] -= 1;
-                    descending[tmppos] = (descending[tmppos] + base) - ascending[tmppos];
-                    --tmppos;
-                }
-            }
-        };
-
-        //Do first
-        intermediates.clear();
-        intermediates.push_back(current);
-        while (std::count(
-                   intermediates.begin(), intermediates.end(), intermediates.back()) == 1)
-        {
-            makeDescendingAndAscendingFromLastIntermediate();
-            subtractAscendingFromDescending();
+            descending->subtract(ascending);
             intermediates.push_back(descending);
         }
-        incrementSpecialArray(current);
+        current++;
         ++itercount;
-        firstNumber=arrayToString(intermediates.back());
+        firstNumber = arrayToString(intermediates.back());
 
         //Do the rest
         while (itercount < checkN)
@@ -124,16 +63,26 @@ class Kaprekar
             while (std::count(
                        intermediates.begin(), intermediates.end(), intermediates.back()) == 1)
             {
-                makeDescendingAndAscendingFromLastIntermediate();
-                subtractAscendingFromDescending();
-                intermediates.push_back(descending);
-            }
-            incrementSpecialArray(current);
-            ++itercount;
-            if(firstNumber.compare(arrayToString(intermediates.back()))!=0)return;
-        }
-        if(firstNumber.compare(arrayToString(intermediates.back()))==0){std::cout<<"Found - "<<firstNumber<<", width="<<width<<", base="<<base<<", nchecks="<<checkN<<"\n";return;}   
+                descending = intermediates.back().sortDescending();
 
-    return;
+            for (int i = 0; i < width; ++i)
+            {
+                ascending[width - 1 - i] = descending[i];
+            }
+            descending->subtract(ascending);
+            intermediates.push_back(descending);
+            }
+            current++;
+            ++itercount;
+            if (firstNumber.compare(intermediates.back().to_string()) != 0)
+                return;
+        }
+        if (firstNumber.compare(intermediates.back().to_string()) == 0)
+        {
+            std::cout << "Found - " << firstNumber << ", width=" << width << ", base=" << base << ", nchecks=" << checkN << "\n";
+            return;
+        }
+
+        return;
     };
 };
