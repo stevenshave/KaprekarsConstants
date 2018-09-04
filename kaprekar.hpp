@@ -1,6 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include "arbitaryInt.hpp"
 template <int base>
 class Kaprekar
 {
