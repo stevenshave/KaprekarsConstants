@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 
 class ArbitaryInt
@@ -6,11 +7,11 @@ class ArbitaryInt
     std::vector<int> tmpdata;
     /* data */
     int pos;
-    unsigned base;
+    int base;
 
   public:
     std::vector<int> data;
-    inline void subtract(const ArbitaryInt &&r)
+    inline void subtract(const ArbitaryInt &r)
     {
         pos = data.size() - 1;
         while (pos >= 0)
@@ -36,7 +37,7 @@ class ArbitaryInt
             data = r.data;
             pos = r.pos;
             base = r.base;
-            tmpdata=r.tmpdata;
+            tmpdata = r.tmpdata;
         }
         return *this;
     };
@@ -44,12 +45,20 @@ class ArbitaryInt
     std::string to_string()
     {
         std::string s;
+
         s += std::to_string(data[0]);
         for (int i = 1; i < data.size(); ++i)
         {
             s += "," + std::to_string(data[i]);
         }
         return s;
+    };
+
+    ArbitaryInt()
+    {
+        data.reserve(1);
+        tmpdata.reserve(1);
+        base = 10;
     };
 
     ArbitaryInt(int numberbase, size_t maxlength = 1000000)
@@ -67,6 +76,8 @@ class ArbitaryInt
             if (data[pos] != base - 1)
             {
                 data[pos] += 1;
+                if (std::count(data.begin(), data.end(), data[0]) == data.size())
+                    operator++();
                 return *this;
             }
             else
@@ -75,6 +86,8 @@ class ArbitaryInt
                 if (pos == 0)
                 {
                     operator++();
+                    if (std::count(data.begin(), data.end(), data[0]) == data.size())
+                        operator++();
                     return *this;
                 }
                 --pos;
@@ -82,8 +95,41 @@ class ArbitaryInt
         }
     };
 
+    bool operator==(const ArbitaryInt &rhs) const
+    {
+        return data == rhs.data;
+    };
+
+    bool operator!=(const ArbitaryInt &rhs) const
+    {
+        return !(data == rhs.data);
+    };
+
+    void SortAscending()
+    {
+        tmpdata = {0, 0, 0, 0};
+        pos = 0;
+        std::cerr<<"About to SortAscending"<<base<<"\n";
+        for (int number = 0; number < base; ++number)
+        {
+            std::cerr << number << "\n";
+            for (int i = 0; i < data.size(); ++i)
+            {
+                if (data[i] == number)
+                {
+                    tmpdata[pos] = number;
+                    ++pos;
+                    std::cerr << number;
+                }
+            }
+        }
+        data = tmpdata;
+        std::cerr << "\n";
+    }
+
     void SortDescending()
     {
+        tmpdata = data;
         pos = 0;
         for (int cur = base - 1; cur >= 0; --cur)
         {
@@ -96,6 +142,6 @@ class ArbitaryInt
                 }
             }
         }
-        data.swap(tmpdata);
+        data = tmpdata;
     };
 };

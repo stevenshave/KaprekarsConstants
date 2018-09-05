@@ -3,18 +3,26 @@
 
 #include "kaprekar.hpp"
 
-
-
 int main(int argc, char *argv[])
 {
-    constexpr int base=4;
-    Kaprekar<base> kap((size_t)1000000);
+
+    // ArbitaryInt a(10, 100);
+    // a.data.resize(4);
+    // a.data={1,9,3,2};
+    // std::cerr<<a.to_string()<<"\n";
+    // a.SortAscending();
+    // std::cerr<<a.to_string()<<"\n";
+
+    int base = 10;
+    int maxwidth = 10000;
+    int num_iterations = 10;
+    Kaprekar kap(base, maxwidth, num_iterations);
     size_t width = 4;
     while (true)
     {
         if (width % 1000 == 0)
             std::cout << "Working on " << width << "\n";
-        kap.goQuickCheckForKaprekarNumbers(width,10);
+        kap.goQuickCheckForKaprekarNumbers(width);
         ++width;
     }
 }
