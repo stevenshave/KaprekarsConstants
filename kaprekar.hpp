@@ -2,29 +2,103 @@
 #include <algorithm>
 #include <string>
 #include <memory>
-#include "arbitaryInt.hpp"
-
+template <class T>
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
+{
+    os << "[";
+    for (typename std::vector<T>::const_iterator ii = v.begin(); ii != v.end(); ++ii)
+    {
+        os << " " << *ii;
+    }
+    os << " ]";
+    return os;
+};
 class Kaprekar
 {
-
   private:
-    ArbitaryInt begin, end, current, ascending, descending;
-    std::string firstNumber;
-    std::vector<ArbitaryInt> intermediates;
+    constexpr static size_t maxlength = 1000000;
+    std::vector<int> begin, end, current, ascending, descending, tmpdata, firstnumber;
+    std::vector<std::vector<int>> intermediates;
     int nIters;
     int base;
+    int pos; //Used for SortDescending
 
   public:
-    Kaprekar(int _base, size_t maxwidth, int num_iterations)
+    Kaprekar(int _base, int num_iterations)
     {
         std::cerr << "Reserving space...";
-        begin = ArbitaryInt(base, maxwidth);
-        current = ArbitaryInt(base, maxwidth);
-        ascending = ArbitaryInt(base, maxwidth);
-        descending = ArbitaryInt(base, maxwidth);
+        begin.reserve(maxlength);
+        current.reserve(maxlength);
+        ascending.reserve(maxlength);
+        descending.reserve(maxlength);
+        tmpdata.reserve(maxlength);
+        intermediates.reserve(1000);
         std::cerr << "Done\n";
         nIters = num_iterations;
         base = _base;
+    };
+
+    inline void SortDescending()
+    {
+        pos = 0;
+        for (int cur = base - 1; cur >= 0; --cur)
+        {
+            for (int i = 0; i < descending.size(); ++i)
+            {
+                if (descending[i] == cur)
+                {
+                    tmpdata[pos] = cur;
+                    ++pos;
+                }
+            }
+        }
+        descending = tmpdata;
+    };
+
+    inline void subtractAfromD()
+    {
+        pos = descending.size() - 1;
+        while (pos >= 0)
+        {
+            if (descending[pos] >= ascending[pos])
+            {
+                descending[pos] -= ascending[pos];
+                --pos;
+            }
+            else
+            {
+                descending[pos - 1] -= 1;
+                descending[pos] = (descending[pos] + base) - ascending[pos];
+                --pos;
+            }
+        }
+    };
+
+    inline void IncrementCurrent()
+    {
+        pos = current.size() - 1;
+        while (true)
+        {
+            if (current[pos] != base - 1)
+            {
+                current[pos] += 1;
+                if (std::count(current.begin(), current.end(), current[0]) == current.size())
+                    IncrementCurrent();
+                return;
+            }
+            else
+            {
+                current[pos] = 0;
+                if (pos == 0)
+                {
+                    IncrementCurrent();
+                    if (std::count(current.begin(), current.end(), current[0]) == current.size())
+                        IncrementCurrent();
+                    return;
+                }
+                --pos;
+            }
+        }
     };
 
     void goQuickCheckForKaprekarNumbers(size_t width)
@@ -32,75 +106,65 @@ class Kaprekar
         int itercount = 0;
 
         //Set up begin to equal ...0001
-        begin.data.resize(width);
+        begin.resize(width);
         for (int i = 0; i < width - 1; ++i)
-            begin.data[i] = 0;
-        begin.data[width - 1] = 1;
-
-       
+            begin[i] = 0;
+        begin[width - 1] = 1;
 
         //Set size of temp ArbitaryInts and set current to begin
-        ascending.data.resize(width);
-        descending.data.resize(width);
-        current=begin;
+        ascending.resize(width);
+        descending.resize(width);
+        tmpdata.resize(width);
+        current = begin;
 
         /////////////////////////////////////////////////////////////////////////////
         //Test ...0001 number to populate firstnumber string
-        
+
         intermediates.clear();
         intermediates.push_back(current);
-    
-        ascending = current;
+
+        descending = current;
         while (std::count(
                    intermediates.begin(), intermediates.end(), intermediates.back()) == 1)
         {
-            
-            ascending.SortAscending();
-            std::cerr<<ascending.to_string()<<"\n";
-            exit(01);
+            SortDescending();
+            //exit(01);
             for (int i = 0; i < width; ++i)
             {
-                descending.data[(width - 1) - i] = ascending.data[i];
+                ascending[(width - 1) - i] = descending[i];
             }
-            descending.subtract(ascending);
+            subtractAfromD();
             intermediates.push_back(descending);
-            ascending=descending;
         }
-        
+        firstnumber = descending;
+        IncrementCurrent();
 
-        std::cerr<<"......"<<intermediates.back().to_string()<<"......."<<"\n";
-        firstNumber = intermediates.back().to_string();
         /////////////////////////////////////////////////////////////////////////////
         //Start checking checkN numbers numbers in a loop
-        std::cerr << "bang\n";
-
         while (itercount < nIters)
         {
-            
             intermediates.clear();
             intermediates.push_back(current);
-            ascending = intermediates.back(); //Check this works here.
+            descending = intermediates.back(); //Check this works here.
             while (std::count(
                        intermediates.begin(), intermediates.end(), intermediates.back()) == 1)
             {
-                ascending.SortAscending();
+                SortDescending();
                 for (int i = 0; i < width; ++i)
                 {
-                    descending.data[width - 1 - i] = ascending.data[i];
+                    ascending[width - 1 - i] = descending[i];
                 }
-            
-                descending.subtract(ascending);
-                intermediates.push_back(descending);
 
+                subtractAfromD();
+                intermediates.push_back(descending);
             }
-            ++current;
+            IncrementCurrent();
             ++itercount;
-            //std::cerr<<"Current="<<current.to_string()<<" ascending="<<ascending.to_string()<<" descending="<<descending.to_string()<<"\n";
             //Check if a different end number has been found and if so, return.
-            if (firstNumber.compare(intermediates.back().to_string()) != 0)
+            if (firstnumber != intermediates.back())
                 return;
         }
-        std::cout << "Found - " << firstNumber << ", width=" << width << ", base=" << base << ", nchecks=" << nIters << "\n";
+        std::cout << "Found - " << firstnumber << ", width=" << width << ", base=" << base << ", nchecks=" << nIters << "\n";
         return;
     };
 };

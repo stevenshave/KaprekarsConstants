@@ -15,9 +15,9 @@ int main(int argc, char *argv[])
 
     int base = 10;
     int maxwidth = 10000;
-    int num_iterations = 10;
-    Kaprekar kap(base, maxwidth, num_iterations);
-    size_t width = 4;
+    int num_iterations = 1000;
+    Kaprekar kap(base, num_iterations);
+    size_t width = 2;
     while (true)
     {
         if (width % 1000 == 0)
